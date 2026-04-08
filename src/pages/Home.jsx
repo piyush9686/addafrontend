@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../services/api";
+import api from "../services/api.js";
 import ProductCard from "../components/ProductCard";
 import Loader from "../components/Loader";
 import Navbar from "../components/Navbar";

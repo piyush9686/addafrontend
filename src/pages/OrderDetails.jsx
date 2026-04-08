@@ -112,7 +112,7 @@ const OrderDetails = () => {
               <div className="flex items-center gap-4">
 
                 <img
-                  src={item.product?.image || "/no-image.png"}
+                  src={item.product?.image[0] || "/no-image.png"}
                   alt={item.product?.name}
                   className="w-20 h-20 object-cover rounded"
                 />

@@ -31,7 +31,9 @@ const Checkout = () => {
 
     try {
 
+      // =========================
       // ✅ COD FLOW
+      // =========================
       if (paymentMethod === "COD") {
 
         await api.post(
@@ -51,7 +53,9 @@ const Checkout = () => {
         navigate("/orders");
       }
 
+      // =========================
       // ✅ RAZORPAY FLOW
+      // =========================
       else if (paymentMethod === "Razorpay") {
 
         const res = await loadRazorpay();
@@ -61,9 +65,9 @@ const Checkout = () => {
           return;
         }
 
-        // 🔥 CALL BACKEND TO CREATE RAZORPAY ORDER
+        // ✅ CREATE ORDER FROM BACKEND
         const { data } = await api.post(
-          "/payment/create-order",   // 👈 your backend route
+          "/payment/create-order",
           {},
           {
             headers: {
@@ -73,33 +77,50 @@ const Checkout = () => {
         );
 
         const options = {
-          key: data.key, // Razorpay key
+          key: data.key,
           amount: data.amount,
           currency: "INR",
           name: "MobileStore",
           description: "Order Payment",
-          order_id: data.orderId,
+
+          // 🔥🔥🔥 FIXED HERE
+          order_id: data.orderId, // ✅ CORRECT
 
           handler: async function (response) {
+            try {
 
-            // ✅ VERIFY PAYMENT
-            await api.post(
-              "/payment/verify-payment",
-              {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                shippingAddress: { address, city, postalCode, country }
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`
+              await api.post(
+                "/payment/verify-payment",
+                {
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+
+                  // ✅ IMPORTANT
+                  dbOrderId: data.dbOrderId,
+                  shippingAddress: { address, city, postalCode, country }
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`
+                  }
                 }
-              }
-            );
+              );
 
-            alert("Payment successful 🎉");
-            navigate("/orders");
+              alert("Payment successful 🎉");
+              navigate("/orders");
+
+            } catch (err) {
+              console.log(err);
+              alert("Payment verification failed ❌");
+            }
+          },
+
+          // ✅ GOOD UX
+          modal: {
+            ondismiss: function () {
+              alert("Payment cancelled ❌");
+            }
           },
 
           prefill: {
@@ -135,17 +156,37 @@ const Checkout = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-            <input name="address" placeholder="Street Address" className="p-3 border rounded"
-              value={form.address} onChange={handleChange} />
+            <input
+              name="address"
+              placeholder="Street Address"
+              className="p-3 border rounded"
+              value={form.address}
+              onChange={handleChange}
+            />
 
-            <input name="city" placeholder="City" className="p-3 border rounded"
-              value={form.city} onChange={handleChange} />
+            <input
+              name="city"
+              placeholder="City"
+              className="p-3 border rounded"
+              value={form.city}
+              onChange={handleChange}
+            />
 
-            <input name="postalCode" placeholder="Postal Code" className="p-3 border rounded"
-              value={form.postalCode} onChange={handleChange} />
+            <input
+              name="postalCode"
+              placeholder="Postal Code"
+              className="p-3 border rounded"
+              value={form.postalCode}
+              onChange={handleChange}
+            />
 
-            <input name="country" placeholder="Country" className="p-3 border rounded"
-              value={form.country} onChange={handleChange} />
+            <input
+              name="country"
+              placeholder="Country"
+              className="p-3 border rounded"
+              value={form.country}
+              onChange={handleChange}
+            />
 
           </div>
         </div>
@@ -157,16 +198,22 @@ const Checkout = () => {
           <div className="space-y-3">
 
             <label className="flex items-center gap-3 border p-3 rounded">
-              <input type="radio" value="COD"
+              <input
+                type="radio"
+                value="COD"
                 checked={paymentMethod === "COD"}
-                onChange={(e) => setPaymentMethod(e.target.value)} />
+                onChange={(e) => setPaymentMethod(e.target.value)}
+              />
               <span>Cash on Delivery</span>
             </label>
 
             <label className="flex items-center gap-3 border p-3 rounded">
-              <input type="radio" value="Razorpay"
+              <input
+                type="radio"
+                value="Razorpay"
                 checked={paymentMethod === "Razorpay"}
-                onChange={(e) => setPaymentMethod(e.target.value)} />
+                onChange={(e) => setPaymentMethod(e.target.value)}
+              />
               <span>Razorpay 💳</span>
             </label>
 
